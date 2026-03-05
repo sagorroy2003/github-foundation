@@ -1,0 +1,107 @@
+# =============================================================================
+# .github/workflows/ci-test.yml — Continuous Integration Pipeline
+# =============================================================================
+#
+# OVERVIEW
+# --------
+# This workflow validates every push and pull request against the main branch.
+# It sets up a Node.js environment, installs dependencies, and runs a dummy
+# test script so you can observe a passing (or failing) CI run in the GitHub
+# Actions tab.
+#
+# TRADE-OFFS: Push vs. Pull Request triggers
+# ------------------------------------------
+# Running on PUSH (every commit to main / feature branches):
+#   ✅ Catches regressions the instant they are introduced.
+#   ✅ Provides early feedback to the developer.
+#   ❌ Consumes more CI minutes — every `git push` triggers a run, even for
+#      work-in-progress commits or minor typo fixes.
+#   ❌ Can create noise in the Actions tab when many small commits are pushed.
+#
+# Running on PULL_REQUEST only:
+#   ✅ Conserves CI minutes — runs once per logical change set.
+#   ✅ Keeps the Actions tab clean; each run maps to a reviewable PR.
+#   ❌ Feedback arrives later; a developer may push broken code many times
+#      before opening a PR.
+#   ❌ Commits that go directly to main (hotfixes, admin merges) are never
+#      tested.
+#
+# RECOMMENDATION FOR THIS REPO
+#   Both triggers are enabled below. This is the standard practice for
+#   open-source and team projects: PRs validate before merge, and push events
+#   on main serve as a post-merge safety net.
+# =============================================================================
+
+name: CI — Node.js Tests
+
+# ---------------------------------------------------------------------------
+# Triggers
+# ---------------------------------------------------------------------------
+on:
+  push:
+    branches:
+      - main           # Post-merge safety net on the protected branch
+  pull_request:
+    branches:
+      - main           # Pre-merge validation gate
+
+# ---------------------------------------------------------------------------
+# Permissions
+# Restrict the GITHUB_TOKEN to the minimum required. This workflow only
+# needs to read repository contents to check out and test the code.
+# ---------------------------------------------------------------------------
+permissions:
+  contents: read
+
+# ---------------------------------------------------------------------------
+# Jobs
+# ---------------------------------------------------------------------------
+jobs:
+  test:
+    name: Install & Test (Node.js ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    # Test against multiple Node.js versions to catch compatibility issues.
+    # Remove versions you don't need to save CI minutes.
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Check out the repository at the commit that triggered the workflow.
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Set up the requested Node.js version from the matrix.
+      #    `cache: 'npm'` stores node_modules between runs so subsequent runs
+      #    skip re-downloading packages (faster, fewer network calls).
+      # -----------------------------------------------------------------------
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: practice/package.json
+
+      # -----------------------------------------------------------------------
+      # 3. Install dependencies defined in practice/package.json.
+      #    `npm ci` is preferred over `npm install` in CI because it:
+      #      - Uses the lockfile for fully reproducible installs.
+      #      - Fails if package.json and lockfile are out of sync.
+      #      - Is faster (no lockfile resolution step).
+      # -----------------------------------------------------------------------
+      - name: Install dependencies
+        working-directory: practice
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # 4. Run the test suite.
+      #    The `test` script is defined in practice/package.json.
+      #    Replace/extend this step as your project grows.
+      # -----------------------------------------------------------------------
+      - name: Run tests
+        working-directory: practice
+        run: npm test
