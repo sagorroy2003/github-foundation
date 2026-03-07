@@ -84,7 +84,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: practice/package.json
+          cache-dependency-path: practice/package-lock.json
 
       # -----------------------------------------------------------------------
       # 3. Install dependencies defined in practice/package.json.
