@@ -25,12 +25,11 @@
 ## Testing Steps
 <!-- Provide clear, reproducible steps so reviewers can verify the change works as intended. -->
 1. Check out this branch: `git checkout <branch-name>`
-2. Install dependencies (if any): `npm install`
-3. Run the relevant test or command:
+2. Change into the project directory: `cd practice`
+3. Install dependencies (if any): `npm ci` (or `npm install` if you cannot use `npm ci`)
+4. Run the relevant test or command:
    ```bash
    # e.g. npm test
-   ```
-4. Expected result:
 
 ## Screenshots / Logs (if applicable)
 <!-- Attach screenshots, terminal output, or CI log excerpts that demonstrate the change. -->
