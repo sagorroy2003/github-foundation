@@ -39,6 +39,7 @@
 #include <algorithm>  // std::swap, std::sort
 #include <chrono>     // timing
 #include <iostream>
+#include <string>
 #include <vector>
 
 // ---------------------------------------------------------------------------
